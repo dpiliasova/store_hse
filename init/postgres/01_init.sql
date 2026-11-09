@@ -1,7 +1,3 @@
--- Единая инициализация PostgreSQL для лекции и практики 2.
--- Выполняется один раз при создании базы на пустом томе.
-
--- Схема
 CREATE TABLE product_categories (
     category_id integer PRIMARY KEY,
     parent_category_id integer REFERENCES product_categories(category_id),
@@ -58,7 +54,6 @@ CREATE TABLE events (
     session_id text
 );
 
--- Сырой слой для примера дедупликации. В отличие от events, event_id не уникален.
 CREATE TABLE raw_events (
     raw_event_row_id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     event_id integer NOT NULL,
@@ -70,7 +65,6 @@ CREATE TABLE raw_events (
     loaded_at timestamp NOT NULL
 );
 
--- Базовые учебные данные
 INSERT INTO product_categories (category_id, parent_category_id, category_name) VALUES
     (1, NULL, 'Electronics'),
     (2, 1, 'Smartphones'),
@@ -205,16 +199,11 @@ SELECT event_id, customer_id, event_time, event_type, product_id, session_id,
        event_time + interval '1 minute'
 FROM events;
 
--- Повторная доставка четырех событий: последняя версия должна выиграть.
 INSERT INTO raw_events (event_id, customer_id, event_time, event_type, product_id, session_id, loaded_at) VALUES
     (201, 1, '2026-03-01 09:55', 'product_view', 1, 's-1', '2026-03-02 08:00'),
     (205, 2, '2026-03-01 10:50', 'product_view', 2, 's-2', '2026-03-02 08:01'),
     (213, 4, '2026-03-04 14:55', 'product_view', 5, 's-4', '2026-03-05 08:00'),
     (223, 8, '2026-03-10 10:55', 'product_view', 3, 's-8', '2026-03-11 08:00');
-
--- Расширенные учебные данные
--- Дополнительные детерминированные данные для лекционных примеров.
--- Полный набор позиций сразу создаётся при инициализации чистого тома.
 
 insert into product_categories (category_id, parent_category_id, category_name) values
     (8, 6, 'Furniture'),
@@ -258,7 +247,6 @@ select order_id,
        end as status
 from generate_series(121, 240) as g(order_id);
 
--- Сохраняем прежние суммы заказов, от которых зависят примеры практики.
 create temporary table seed_extra_totals as
 select order_id,
        sum(quantity * unit_price - discount_amount)::numeric(12, 2) as total_amount
@@ -281,7 +269,6 @@ from (
 ) as source_items
 group by order_id;
 
--- От 1 до 6 разных товаров на заказ. Деление в копейках сохраняет сумму точно.
 create temporary table seed_extra_items as
 with weighted_items as (
     select t.order_id, t.total_amount, item_no,
@@ -328,7 +315,6 @@ select order_id, product_id, quantity, unit_price, discount_amount
 from seed_extra_items
 on conflict (order_id, product_id) do nothing;
 
--- Первая попытка платежа: успешная, неуспешная или ожидающая по статусу заказа.
 insert into payments (payment_id, order_id, paid_at, payment_status, amount)
 select o.order_id * 10 + 1, o.order_id,
        case when e.status = 'pending' then null
@@ -342,7 +328,6 @@ from orders as o
 join seed_extra_orders as e using (order_id)
 on conflict (payment_id) do nothing;
 
--- Возврат обнуляет платежный итог; часть оплаченных заказов оплачена в два шага.
 insert into payments (payment_id, order_id, paid_at, payment_status, amount)
 select o.order_id * 10 + 2, o.order_id,
        case when e.status = 'returned'
@@ -357,7 +342,6 @@ where e.status = 'returned'
    or (e.status = 'paid' and mod(o.order_id, 23) = 0)
 on conflict (payment_id) do nothing;
 
--- Неуспешная попытка перед удачной оплатой.
 insert into payments (payment_id, order_id, paid_at, payment_status, amount)
 select o.order_id * 10 + 3, o.order_id,
        e.order_created_at + interval '2 minutes', 'failed', o.total_amount
@@ -400,7 +384,6 @@ where not exists (
       and r.loaded_at = e.event_time + interval '1 minute'
 );
 
--- Повторная доставка одного события на каждые десять новых заказов.
 insert into raw_events
     (event_id, customer_id, event_time, event_type, product_id, session_id, loaded_at)
 select e.event_id, e.customer_id, e.event_time, e.event_type, e.product_id,
@@ -414,8 +397,6 @@ where mod(e.event_id, 10) = 1
         and r.loaded_at = e.event_time + interval '1 day'
   );
 
--- Дополнительный заказ делает суммы оплаченных заказов клиентов 1 и 2 равными.
--- Поэтому dense_rank() в примере №19 показывает общую первую позицию.
 insert into orders (order_id, customer_id, order_created_at, status, total_amount)
 values (241, 1, '2026-07-11 10:00', 'paid', 550)
 on conflict (order_id) do nothing;

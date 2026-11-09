@@ -1,8 +1,3 @@
--- Загрузка (EL): копируем сырые таблицы OLTP-базы в схему raw хранилища Greenplum.
--- Это не dbt: dbt работает внутри одной базы и только преобразует (T) то, что уже загружено.
--- Позже в курсе эту загрузку будет запускать Airflow. Повторный запуск перезаливает данные.
-
--- 1. Доступ к PostgreSQL магазина: его таблицы видны в Greenplum как внешние (foreign).
 create extension if not exists postgres_fdw;
 create server if not exists oltp_shop
     foreign data wrapper postgres_fdw
@@ -11,14 +6,12 @@ create user mapping if not exists for current_user
     server oltp_shop
     options (user 'student', password 'studentpass');
 
-drop schema if exists oltp_fdw cascade;   -- тут только ссылки на таблицы, данных нет
+drop schema if exists oltp_fdw cascade;
 create schema oltp_fdw;
 import foreign schema public
     limit to (customers, products, product_categories, orders, order_items, payments)
     from server oltp_shop into oltp_fdw;
 
--- 2. Сырой слой. Ограничений (PK, FK, CHECK) нет: в Greenplum первичный ключ обязан включать
--- ключ распределения, а внешние ключи не проверяются. Качество данных проверяют тесты dbt.
 create schema if not exists raw;
 
 create table if not exists raw.customers (
@@ -35,7 +28,6 @@ create table if not exists raw.products (
     product_name text
 ) distributed by (product_id);
 
--- Маленький справочник: копия на каждом сегменте, JOIN с ним без пересылки строк.
 create table if not exists raw.product_categories (
     category_id integer,
     parent_category_id integer,
@@ -50,7 +42,6 @@ create table if not exists raw.orders (
     total_amount numeric(12, 2)
 ) distributed by (order_id);
 
--- Позиции и платежи распределены по order_id, как и заказы: JOIN по order_id идёт локально.
 create table if not exists raw.order_items (
     order_id integer,
     product_id integer,
@@ -67,7 +58,6 @@ create table if not exists raw.payments (
     amount numeric(12, 2)
 ) distributed by (order_id);
 
--- 3. Полная перезаливка в одной транзакции.
 begin;
 truncate raw.customers, raw.products, raw.product_categories,
          raw.orders, raw.order_items, raw.payments;

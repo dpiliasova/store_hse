@@ -1,0 +1,41 @@
+erDiagram
+    dim_customers {
+        int customer_id PK
+        text city
+    }
+
+    dim_products {
+        int product_id PK
+        text product_name
+        text category_name
+    }
+
+    dim_dates {
+        date date_day PK
+        int date_year
+        int date_month
+    }
+
+    fct_orders {
+        int order_id PK
+        int customer_id FK
+        date order_date FK
+        numeric order_amount
+    }
+
+    fct_order_items {
+        text order_item_id PK
+        int order_id FK
+        int customer_id FK
+        int product_id FK
+        date order_date FK
+        int quantity
+        numeric line_amount
+    }
+
+    dim_customers ||--o{ fct_orders : customer_id
+    dim_dates ||--o{ fct_orders : "date_day = order_date"
+    dim_customers ||--o{ fct_order_items : customer_id
+    dim_dates ||--o{ fct_order_items : "date_day = order_date"
+    dim_products ||--o{ fct_order_items : product_id
+    fct_orders ||--|{ fct_order_items : order_id

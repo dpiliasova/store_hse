@@ -1,6 +1,5 @@
-{{ config(distributed_by='order_id') }}
--- Задание 4. Факт заказов: одна строка — один заказ. Тестовые заказы в витрину не попадают.
--- Материализация — table (задана для папки marts в dbt_project.yml).
+{{ config(distributed_by='order_id', orientation='column') }}
+
 select
     order_id,
     customer_id,
