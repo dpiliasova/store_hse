@@ -24,3 +24,28 @@ models:
         description: "Число неуспешных операций."
       - name: pending_operations_count
         description: "Число операций в ожидании."
+
+  - name: int_products_with_categories
+    description: >
+      Одна строка - один товар с иерархией категорий до трех уровней.
+      Связь товара с категорией - по названию, связь категорий между собой - по номерам.
+      Товар остается в результате, даже если категория или ее родители не найдены.
+    columns:
+      - name: product_id
+        description: "Номер товара."
+      - name: product_name
+        description: "Название товара."
+      - name: brand
+        description: "Бренд товара."
+      - name: category_name
+        description: "Название категории из записи товара."
+      - name: category_id
+        description: "Номер категории, найденной по названию."
+      - name: parent_category_id
+        description: "Номер родительской категории, если она есть."
+      - name: parent_category_name
+        description: "Название родительской категории."
+      - name: grandparent_category_id
+        description: "Номер категории на уровень выше родительской, если она есть."
+      - name: grandparent_category_name
+        description: "Название категории на уровень выше родительской."

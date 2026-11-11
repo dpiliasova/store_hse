@@ -74,3 +74,25 @@ models:
                 values: ['success', 'failed', 'pending']
       - name: is_refund
         description: "Возврат: успешная операция с отрицательной суммой."
+
+  - name: stg_shop__products
+    description: "Товары из источника. Одна строка - один товар."
+    columns:
+      - name: product_id
+        description: "Номер товара."
+      - name: product_name
+        description: "Название товара."
+      - name: brand
+        description: "Бренд товара."
+      - name: category
+        description: "Название категории товара для связи с product_categories."
+
+  - name: stg_shop__product_categories
+    description: "Категории товаров из источника. Одна строка - одна категория."
+    columns:
+      - name: category_id
+        description: "Номер категории."
+      - name: parent_category_id
+        description: "Номер родительской категории; пусто у корневой категории."
+      - name: category_name
+        description: "Название категории."
