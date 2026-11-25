@@ -4,3 +4,10 @@ logs/
 .venv/
 .DS_Store
 .user.yml
+__pycache__/
+*.pyc
+checks.log
+spark_check/.state/
+spark-warehouse/
+metastore_db/
+derby.log
