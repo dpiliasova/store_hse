@@ -8,6 +8,8 @@ models:
     columns:
       - name: order_id
         description: "Номер заказа."
+      - name: items_count
+        description: "Число разных товаров в заказе, рассчитанное до соединения с платежами."
       - name: successful_payments_count
         description: "Число успешных оплат без возвратов."
       - name: paid_amount
@@ -17,7 +19,7 @@ models:
       - name: net_paid_amount
         description: "Оплачено минус возвращено."
       - name: is_confirmed
-        description: "Подтвержденная покупка: статус paid и хотя бы одна успешная оплата."
+        description: "{{ doc('confirmed_order') }}"
       - name: success_operations_count
         description: "Число операций в статусе success, включая возвраты."
       - name: failed_operations_count
@@ -49,3 +51,19 @@ models:
         description: "Номер категории на уровень выше родительской, если она есть."
       - name: grandparent_category_name
         description: "Название категории на уровень выше родительской."
+      - name: root_category_name
+        description: "Название корневой категории: самый верхний заполненный уровень дерева до трех уровней."
+
+  - name: int_customer_order_metrics
+    description: "Итоги подтвержденных нетестовых заказов. Одна строка - один клиент с покупками. Первая покупка определяется по времени заказа, при равенстве времени - по номеру заказа."
+    columns:
+      - name: customer_id
+        description: "Номер клиента."
+      - name: first_confirmed_order_id
+        description: "Номер первой подтвержденной покупки."
+      - name: first_confirmed_at
+        description: "Время оформления первой подтвержденной покупки."
+      - name: confirmed_orders_count
+        description: "Число подтвержденных нетестовых заказов клиента."
+      - name: confirmed_revenue
+        description: "Сумма стоимости подтвержденных заказов после скидок."
